@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QGridLayout, QHBoxLayout, QFormLayout, QLineEdit, QLabel
+from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QGridLayout, QHBoxLayout, QFormLayout, \
+    QLineEdit, QLabel
 from graph import Graph
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -19,6 +20,12 @@ class Window(QDialog):
         self.figure_rk = plt.figure()
         self.figure_exact = plt.figure()
 
+        # set the layout
+        main_layout = QHBoxLayout()
+        config_layout = QFormLayout()
+        layout = QVBoxLayout()
+        glayout = QGridLayout()
+
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas_euler = FigureCanvas(self.figure_euler)
@@ -32,14 +39,13 @@ class Window(QDialog):
 
         # Just some button connected to `plot` method
         self.b_plot = QPushButton('Plot ')
+        self.b_set = QPushButton("Set")
+
+        # Add action to buttons
         self.b_plot.clicked.connect(self.plot)
+        self.b_set.clicked.connect(self.change_params)
 
-        # set the layout
-        main_layout = QHBoxLayout()
-        config_layout = QFormLayout()
-        layout = QVBoxLayout()
-        glayout = QGridLayout()
-
+        # Add widgets to layouts
         layout.addWidget(self.toolbar)
         layout.addLayout(glayout)
         layout.addWidget(self.b_plot)
@@ -49,23 +55,32 @@ class Window(QDialog):
         glayout.addWidget(self.canvas_rk, 1, 0)
         glayout.addWidget(self.canvas_exact, 1, 1)
 
-        config_layout.addRow(QLabel('x0:'), QLineEdit())
-        config_layout.addRow(QLabel('y0:'), QLineEdit())
-        config_layout.addRow(QLabel('X:'), QLineEdit())
-        config_layout.addRow(QLabel('h:'), QLineEdit())
+        self.x0 = QLineEdit()
+        self.y0 = QLineEdit()
+        self.X = QLineEdit()
+        self.h = QLineEdit()
 
-        set_button = QPushButton("Set")
-        config_layout.addWidget(set_button)
+        config_layout.addRow(QLabel('x0:'), self.x0)
+        config_layout.addRow(QLabel('y0:'), self.y0)
+        config_layout.addRow(QLabel('X:'), self.X)
+        config_layout.addRow(QLabel('h:'), self.h)
+        config_layout.addWidget(self.b_set)
+
         main_layout.addLayout(layout)
         main_layout.addLayout(config_layout)
 
         self.setLayout(main_layout)
 
-    def plot(self):
+    def change_params(self):
+        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != "" and \
+                self.x0.text().isdigit() and self.y0.text().isdigit() and self.X.text().isdigit() \
+                and self.h.text().isdigit():
+            self.graph.set_params(int(self.x0.text()), int(self.y0.text()), int(self.X.text()), int(self.h.text()))
+            self.plot()
 
+    def plot(self):
         # Calculate
         self.graph.calculate()
-        self.graph.calc_exact()
 
         # clear all figures
         self.figure_euler.clear()
@@ -99,5 +114,3 @@ if __name__ == '__main__':
     main.showMaximized()
 
     sys.exit(app.exec_())
-
-
