@@ -35,7 +35,10 @@ class Window(QDialog):
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas_euler, self)
+        self.toolbar_euler = NavigationToolbar(self.canvas_euler, self)
+        self.toolbar_imp_euler = NavigationToolbar(self.canvas_imp_euler, self)
+        self.toolbar_rk = NavigationToolbar(self.canvas_rk, self)
+        self.toolbar_exact = NavigationToolbar(self.canvas_exact, self)
 
         # Just some button connected to `plot` method
         self.b_plot = QPushButton('Plot ')
@@ -46,14 +49,25 @@ class Window(QDialog):
         self.b_set.clicked.connect(self.change_params)
 
         # Add widgets to layouts
-        layout.addWidget(self.toolbar)
         layout.addLayout(glayout)
         layout.addWidget(self.b_plot)
 
-        glayout.addWidget(self.canvas_euler, 0, 0)
-        glayout.addWidget(self.canvas_imp_euler, 0, 1)
-        glayout.addWidget(self.canvas_rk, 1, 0)
-        glayout.addWidget(self.canvas_exact, 1, 1)
+        glayout.addWidget(self.toolbar_euler, 0, 0)
+        glayout.addWidget(self.canvas_euler, 1, 0)
+
+        glayout.addWidget(self.toolbar_imp_euler, 0, 1)
+        glayout.addWidget(self.canvas_imp_euler, 1, 1)
+
+        glayout.addWidget(self.toolbar_rk, 2, 0)
+        glayout.addWidget(self.canvas_rk, 3, 0)
+
+        glayout.addWidget(self.toolbar_exact, 2, 1)
+        glayout.addWidget(self.canvas_exact, 3, 1)
+
+
+        # glayout.addWidget(self.canvas_imp_euler, 0, 1)
+        # glayout.addWidget(self.canvas_rk, 1, 0)
+        # glayout.addWidget(self.canvas_exact, 1, 1)
 
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
