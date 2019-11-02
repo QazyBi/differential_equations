@@ -21,7 +21,8 @@ class Window(QDialog):
 
         # a figure instance to plot on
         self.figure_function = plt.figure()
-        self.figure_error = plt.figure()
+        self.figure_local_error = plt.figure()
+        self.figure_global_error = plt.figure()
 
         # set the layout
         main_layout = QHBoxLayout()
@@ -47,15 +48,18 @@ class Window(QDialog):
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas_function = FigureCanvas(self.figure_function)
-        self.canvas_error = FigureCanvas(self.figure_error)
+        self.canvas_local_error = FigureCanvas(self.figure_local_error)
+        self.canvas_global_error = FigureCanvas(self.figure_global_error)
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.toolbar_function = NavigationToolbar(self.canvas_function, self)
-        self.toolbar_error = NavigationToolbar(self.canvas_error, self)
+        self.toolbar_local_error = NavigationToolbar(self.canvas_local_error, self)
+        self.toolbar_global_error = NavigationToolbar(self.canvas_global_error, self)
 
         self.toolbar_function.setStyleSheet("background-color: white")
-        self.toolbar_error.setStyleSheet("background-color: white")
+        self.toolbar_local_error.setStyleSheet("background-color: white")
+        self.toolbar_global_error.setStyleSheet("background-color: white")
 
         # Just some button connected to `plot` method
         self.b_plot = QPushButton('Plot')
@@ -73,38 +77,53 @@ class Window(QDialog):
         glayout.addWidget(self.toolbar_function, 0, 0)
         glayout.addWidget(self.canvas_function, 1, 0)
 
-        glayout.addWidget(self.toolbar_error, 0, 1)
-        glayout.addWidget(self.canvas_error, 1, 1)
+        glayout.addWidget(self.toolbar_local_error, 0, 1)
+        glayout.addWidget(self.canvas_local_error, 1, 1)
+
+        glayout.addWidget(self.toolbar_global_error, 0, 2)
+        glayout.addWidget(self.canvas_global_error, 1, 2)
 
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
         self.X = QLineEdit()
         self.h = QLineEdit()
+        self.h_start = QLineEdit()
+        self.h_end = QLineEdit()
 
         self.x0.setStyleSheet("background-color: #DCDDDF")
         self.y0.setStyleSheet("background-color: #DCDDDF")
         self.X.setStyleSheet("background-color: #DCDDDF")
         self.h.setStyleSheet("background-color: #DCDDDF")
+        self.h_start.setStyleSheet("background-color: #DCDDDF")
+        self.h_end.setStyleSheet("background-color: #DCDDDF")
 
         self.x0.setText("1")
         self.y0.setText("0")
         self.X.setText("8")
         self.h.setText("4")
+        self.h_start.setText("1")
+        self.h_end.setText("5")
 
         x0_text = QLabel('x0:')
         y0_text = QLabel('y0:')
         X_text = QLabel('X:')
         h_text = QLabel('h:')
+        h_start_text = QLabel('h start:')
+        h_end_text = QLabel('h end:')
 
         x0_text.setStyleSheet("color: #DCDDDF")
         y0_text.setStyleSheet("color: #DCDDDF")
         X_text.setStyleSheet("color: #DCDDDF")
         h_text.setStyleSheet("color: #DCDDDF")
+        h_start_text.setStyleSheet('color: #DCDDDF')
+        h_end_text.setStyleSheet('color: #DCDDDF')
 
         config_layout.addRow(x0_text, self.x0)
         config_layout.addRow(y0_text, self.y0)
         config_layout.addRow(X_text, self.X)
         config_layout.addRow(h_text, self.h)
+        config_layout.addRow(h_start_text, self.h_start)
+        config_layout.addRow(h_end_text, self.h_end)
 
         config_layout.addWidget(self.b_set)
         config_layout.addWidget(self.b_plot)
@@ -136,7 +155,8 @@ class Window(QDialog):
         self.plot()
 
     def change_params(self):
-        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != "":
+        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != ""\
+                and self.h_start.text() != "" and self.h_end.text() != "":
 
             if float(self.x0.text()) == 0:
                 self.x0.setText("Incorrect")
@@ -144,49 +164,58 @@ class Window(QDialog):
                 self.X.setText("Incorrect")
             else:
                 self.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
-                                      float(self.h.text()))
+                                      float(self.h.text()), float(self.h_start.text()), float(self.h_end.text()))
                 self.plot()
 
     def plot(self):
         # clear all figures
         self.figure_function.clear()
-        self.figure_error.clear()
+        self.figure_local_error.clear()
+        self.figure_global_error.clear()
 
         # create an axis
         ax_function = self.figure_function.add_subplot(111, xlabel="values of x", ylabel="values of y")
-        ax_error = self.figure_error.add_subplot(111, xlabel="values of x", ylabel="values of y")
+        ax_local_error = self.figure_local_error.add_subplot(111, xlabel="values of x", ylabel="values of y")
+        ax_global_error = self.figure_global_error.add_subplot(111, xlabel="values of h", ylabel="values of y")
 
         # set titles
         ax_function.set(title='Graph of Exact and Approximation Functions')
-        ax_error.set(title='Graph of Errors')
+        ax_local_error.set(title='Graph of Local Errors')
+        ax_global_error.set(title='Graph of Global Errors')
 
         # Plot chosen graphs
         if self.is_euler:
-            func, error = self.graph.calc_euler()
+            func, local_error = self.graph.calc_euler()
             ax_function.plot(self.graph.axis, func, color="#F6D349", label='Euler')
-            ax_error.plot(self.graph.axis, error, color="#F6D349", label='Euler')
+            ax_local_error.plot(self.graph.axis, local_error, color="#F6D349", label='Euler')
+            ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_euler(), color="#F6D349", label='Euler')
+            print(self.graph.calc_global_euler())
 
         if self.is_imp_euler:
-            func, error = self.graph.calc_imp_euler()
+            func, local_error = self.graph.calc_imp_euler()
             ax_function.plot(self.graph.axis, func, color="#8FDDD3", label='Improved Euler')
-            ax_error.plot(self.graph.axis, error, color="#8FDDD3", label='Improved Euler')
+            ax_local_error.plot(self.graph.axis, local_error, color="#8FDDD3", label='Improved Euler')
+            ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_imp_euler(), color="#8FDDD3",
+                                 label='Improved Euler')
 
         if self.is_rk:
-            func, error = self.graph.calc_rk()
+            func, local_error = self.graph.calc_rk()
             ax_function.plot(self.graph.axis, func, color="magenta", label='Runge-Kutta')
-            ax_error.plot(self.graph.axis, error, color="magenta", label='Runge-Kutta')
+            ax_local_error.plot(self.graph.axis, local_error, color="magenta", label='Runge-Kutta')
+            ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_rk(), color="magenta", label='Runge-Kutta')
 
         if self.is_exact:
             ax_function.plot(self.graph.e_axis, self.graph.calc_exact(), '--', color="red", label='Exact')
 
         # Display Legend of each graph
         ax_function.legend()
-        ax_error.legend()
+        ax_local_error.legend()
+        ax_global_error.legend()
 
         # refresh canvas
         self.canvas_function.draw()
-        self.canvas_error.draw()
-
+        self.canvas_local_error.draw()
+        self.canvas_global_error.draw()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
