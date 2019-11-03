@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QGridLayout, QHBoxLayout, QFormLayout, \
     QLineEdit, QLabel
 from graph import Graph
+from PyQt5.QtCore import Qt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -26,24 +27,24 @@ class Window(QDialog):
 
         # set the layout
         main_layout = QHBoxLayout()
-        config_layout = QFormLayout()
+        config_layout = QGridLayout()
         layout = QVBoxLayout()
         glayout = QGridLayout()
 
-        b_add_euler = QPushButton("Euler")
-        b_add_imp_euler = QPushButton("Improved Euler")
-        b_add_rk = QPushButton("Runge-Kutta")
-        b_add_exact = QPushButton("Exact")
+        self.b_add_euler = QPushButton("Euler")
+        self.b_add_imp_euler = QPushButton("Improved Euler")
+        self.b_add_rk = QPushButton("Runge-Kutta")
+        self.b_add_exact = QPushButton("Exact")
 
-        b_add_euler.setStyleSheet("background-color: #DCDDDF")
-        b_add_imp_euler.setStyleSheet("background-color: #DCDDDF")
-        b_add_rk.setStyleSheet("background-color: #DCDDDF")
-        b_add_exact.setStyleSheet("background-color: #DCDDDF")
+        self.b_add_euler.setStyleSheet("background-color: #DCDDDF")
+        self.b_add_imp_euler.setStyleSheet("background-color: #DCDDDF")
+        self.b_add_rk.setStyleSheet("background-color: #DCDDDF")
+        self.b_add_exact.setStyleSheet("background-color: #DCDDDF")
 
-        b_add_euler.clicked.connect(self.euler_switch)
-        b_add_imp_euler.clicked.connect(self.imp_euler_switch)
-        b_add_rk.clicked.connect(self.rk_switch)
-        b_add_exact.clicked.connect(self.exact_switch)
+        self.b_add_euler.clicked.connect(self.euler_switch)
+        self.b_add_imp_euler.clicked.connect(self.imp_euler_switch)
+        self.b_add_rk.clicked.connect(self.rk_switch)
+        self.b_add_exact.clicked.connect(self.exact_switch)
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
@@ -80,15 +81,31 @@ class Window(QDialog):
         glayout.addWidget(self.toolbar_local_error, 0, 1)
         glayout.addWidget(self.canvas_local_error, 1, 1)
 
-        glayout.addWidget(self.toolbar_global_error, 0, 2)
-        glayout.addWidget(self.canvas_global_error, 1, 2)
+        glayout.addWidget(self.toolbar_global_error, 2, 0)
+        glayout.addWidget(self.canvas_global_error, 3, 0)
 
+        glayout.addItem(config_layout)
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
         self.X = QLineEdit()
         self.h = QLineEdit()
         self.h_start = QLineEdit()
         self.h_end = QLineEdit()
+
+        self.x0.setFixedSize(50, 30)
+        self.y0.setFixedSize(50, 30)
+        self.X.setFixedSize(50, 30)
+        self.h.setFixedSize(50, 30)
+        self.h_start.setFixedSize(50, 30)
+        self.h_end.setFixedSize(50, 30)
+
+        self.b_plot.setFixedSize(150, 20)
+        self.b_set.setFixedSize(150, 20)
+        self.b_add_exact.setFixedSize(150, 20)
+        self.b_add_imp_euler.setFixedSize(150, 20)
+        self.b_add_euler.setFixedSize(150, 20)
+        self.b_add_imp_euler.setFixedSize(150, 20)
+        self.b_add_rk.setFixedSize(150, 20)
 
         self.x0.setStyleSheet("background-color: #DCDDDF")
         self.y0.setStyleSheet("background-color: #DCDDDF")
@@ -107,9 +124,16 @@ class Window(QDialog):
         x0_text = QLabel('x0:')
         y0_text = QLabel('y0:')
         X_text = QLabel('X:')
-        h_text = QLabel('h:')
+        h_text = QLabel('N:')
         h_start_text = QLabel('h start:')
         h_end_text = QLabel('h end:')
+
+        x0_text.setFixedSize(20, 30)
+        y0_text.setFixedSize(20, 30)
+        X_text.setFixedSize(20, 30)
+        h_text.setFixedSize(20, 30)
+        h_start_text.setFixedSize(55, 30)
+        h_end_text.setFixedSize(50, 30)
 
         x0_text.setStyleSheet("color: #DCDDDF")
         y0_text.setStyleSheet("color: #DCDDDF")
@@ -118,23 +142,34 @@ class Window(QDialog):
         h_start_text.setStyleSheet('color: #DCDDDF')
         h_end_text.setStyleSheet('color: #DCDDDF')
 
-        config_layout.addRow(x0_text, self.x0)
-        config_layout.addRow(y0_text, self.y0)
-        config_layout.addRow(X_text, self.X)
-        config_layout.addRow(h_text, self.h)
-        config_layout.addRow(h_start_text, self.h_start)
-        config_layout.addRow(h_end_text, self.h_end)
+        config_layout.addWidget(x0_text, 0, 0)
+        config_layout.addWidget(self.x0, 0, 1)
 
-        config_layout.addWidget(self.b_set)
-        config_layout.addWidget(self.b_plot)
+        config_layout.addWidget(y0_text, 1, 0)
+        config_layout.addWidget(self.y0, 1, 1)
 
-        config_layout.addWidget(b_add_euler)
-        config_layout.addWidget(b_add_imp_euler)
-        config_layout.addWidget(b_add_rk)
-        config_layout.addWidget(b_add_exact)
+        config_layout.addWidget(X_text, 2, 0)
+        config_layout.addWidget(self.X, 2, 1)
+
+        config_layout.addWidget(h_text, 3, 0)
+        config_layout.addWidget(self.h, 3, 1)
+
+        config_layout.addWidget(h_start_text, 4, 0)
+        config_layout.addWidget(self.h_start, 4, 1)
+
+        config_layout.addWidget(h_end_text, 5, 0)
+        config_layout.addWidget(self.h_end, 5, 1)
+
+        config_layout.addWidget(self.b_set, 0, 2)
+        config_layout.addWidget(self.b_plot, 1, 2)
+
+        config_layout.addWidget(self.b_add_euler, 2, 2)
+        config_layout.addWidget(self.b_add_imp_euler, 3, 2)
+        config_layout.addWidget(self.b_add_rk, 4, 2)
+        config_layout.addWidget(self.b_add_exact, 5, 2)
 
         main_layout.addLayout(layout)
-        main_layout.addLayout(config_layout)
+        # main_layout.addLayout(config_layout)
 
         self.setLayout(main_layout)
 
@@ -155,7 +190,7 @@ class Window(QDialog):
         self.plot()
 
     def change_params(self):
-        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != ""\
+        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != "" \
                 and self.h_start.text() != "" and self.h_end.text() != "":
 
             if float(self.x0.text()) == 0:
@@ -189,7 +224,6 @@ class Window(QDialog):
             ax_function.plot(self.graph.axis, func, color="#F6D349", label='Euler')
             ax_local_error.plot(self.graph.axis, local_error, color="#F6D349", label='Euler')
             ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_euler(), color="#F6D349", label='Euler')
-            print(self.graph.calc_global_euler())
 
         if self.is_imp_euler:
             func, local_error = self.graph.calc_imp_euler()
@@ -216,6 +250,7 @@ class Window(QDialog):
         self.canvas_function.draw()
         self.canvas_local_error.draw()
         self.canvas_global_error.draw()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
