@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QGridLayout, QHBoxLayout, QFormLayout, \
     QLineEdit, QLabel
-from graph import Graph
+from graph import *
 from PyQt5.QtCore import Qt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -18,7 +18,10 @@ class Window(QDialog):
         self.is_exact = True
 
         # Model, from MVC design pattern
-        self.graph = Graph()
+        self.graph = MyFunction()
+        self.graph_euler = EulerApproximation(self.graph)
+        self.graph_imp_euler = ImpEulerApproximation(self.graph)
+        self.graph_rk = RKApproximation(self.graph)
 
         # a figure instance to plot on
         self.figure_function = plt.figure()
@@ -198,8 +201,25 @@ class Window(QDialog):
             elif float(self.X.text()) <= 2:
                 self.X.setText("Incorrect")
             else:
-                self.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
-                                      float(self.h.text()), float(self.h_start.text()), float(self.h_end.text()))
+                self.graph_euler.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
+                                                  float(self.h.text()), float(self.h_start.text()),
+                                                  float(self.h_end.text()))
+
+                self.graph_euler.update_axes()
+
+                self.graph_imp_euler.graph.set_params(float(self.x0.text()), float(self.y0.text()),
+                                                      float(self.X.text()),
+                                                      float(self.h.text()), float(self.h_start.text()),
+                                                      float(self.h_end.text()))
+
+                self.graph_imp_euler.update_axes()
+
+                self.graph_rk.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
+                                               float(self.h.text()), float(self.h_start.text()),
+                                               float(self.h_end.text()))
+                self.graph_rk.update_axes()
+
+
                 self.plot()
 
     def plot(self):
@@ -220,26 +240,34 @@ class Window(QDialog):
 
         # Plot chosen graphs
         if self.is_euler:
-            func, local_error = self.graph.calc_euler()
-            ax_function.plot(self.graph.axis, func, color="#F6D349", label='Euler')
-            ax_local_error.plot(self.graph.axis, local_error, color="#F6D349", label='Euler')
-            ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_euler(), color="#F6D349", label='Euler')
+            func = self.graph_euler.calculate_approximation()
+            local_error = self.graph_euler.calculate_local_error()
+            global_error = self.graph_euler.calculate_global_error()
+
+            ax_function.plot(self.graph_euler.axis, func, color="#F6D349", label='Euler')
+            ax_local_error.plot(self.graph_euler.axis, local_error, color="#F6D349", label='Euler')
+            ax_global_error.plot(self.graph_euler.g_axis, global_error, color="#F6D349", label='Euler')
 
         if self.is_imp_euler:
-            func, local_error = self.graph.calc_imp_euler()
-            ax_function.plot(self.graph.axis, func, color="#8FDDD3", label='Improved Euler')
-            ax_local_error.plot(self.graph.axis, local_error, color="#8FDDD3", label='Improved Euler')
-            ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_imp_euler(), color="#8FDDD3",
-                                 label='Improved Euler')
+            func = self.graph_imp_euler.calculate_local_error()
+            local_error = self.graph_imp_euler.calculate_local_error()
+            global_error = self.graph_imp_euler.calculate_global_error()
+
+            ax_function.plot(self.graph_imp_euler.axis, func, color="#8FDDD3", label='Improved Euler')
+            ax_local_error.plot(self.graph_imp_euler.axis, local_error, color="#8FDDD3", label='Improved Euler')
+            ax_global_error.plot(self.graph_imp_euler.g_axis, global_error, color="#8FDDD3", label='Improved Euler')
 
         if self.is_rk:
-            func, local_error = self.graph.calc_rk()
-            ax_function.plot(self.graph.axis, func, color="magenta", label='Runge-Kutta')
-            ax_local_error.plot(self.graph.axis, local_error, color="magenta", label='Runge-Kutta')
-            ax_global_error.plot(self.graph.g_axis, self.graph.calc_global_rk(), color="magenta", label='Runge-Kutta')
+            func = self.graph_rk.calculate_approximation()
+            local_error = self.graph_rk.calculate_local_error()
+            global_error = self.graph_rk.calculate_global_error()
+
+            ax_function.plot(self.graph_rk.axis, func, color="magenta", label='Runge-Kutta')
+            ax_local_error.plot(self.graph_rk.axis, local_error, color="magenta", label='Runge-Kutta')
+            ax_global_error.plot(self.graph_rk.g_axis, global_error, color="magenta", label='Runge-Kutta')
 
         if self.is_exact:
-            ax_function.plot(self.graph.e_axis, self.graph.calc_exact(), '--', color="red", label='Exact')
+            ax_function.plot(self.graph_euler.e_axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
 
         # Display Legend of each graph
         ax_function.legend()
