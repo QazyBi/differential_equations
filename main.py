@@ -1,14 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QGridLayout, QHBoxLayout, QFormLayout, \
-    QLineEdit, QLabel
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QApplication, QPushButton, QGridLayout, QLineEdit, QLabel
 from graph import *
-from PyQt5.QtCore import Qt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 
-class Window(QDialog):
+class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
 
@@ -24,14 +22,12 @@ class Window(QDialog):
         self.graph_rk = RKApproximation(self.graph)
 
         # a figure instance to plot on
-        self.figure_function = plt.figure()
-        self.figure_local_error = plt.figure()
-        self.figure_global_error = plt.figure()
+        self.figure_function = plt.figure(figsize=(6,3))
+        self.figure_local_error = plt.figure(figsize=(6,3))
+        self.figure_global_error = plt.figure(figsize=(6,3))
 
         # set the layout
-        main_layout = QHBoxLayout()
         config_layout = QGridLayout()
-        layout = QVBoxLayout()
         glayout = QGridLayout()
 
         self.b_add_euler = QPushButton("Euler")
@@ -55,15 +51,23 @@ class Window(QDialog):
         self.canvas_local_error = FigureCanvas(self.figure_local_error)
         self.canvas_global_error = FigureCanvas(self.figure_global_error)
 
+        # self.canvas_function.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        # self.canvas_local_error.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        # self.canvas_global_error.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.canvas_function.updateGeometry()
+        self.canvas_local_error.updateGeometry()
+        self.canvas_global_error.updateGeometry()
+
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
-        self.toolbar_function = NavigationToolbar(self.canvas_function, self)
-        self.toolbar_local_error = NavigationToolbar(self.canvas_local_error, self)
-        self.toolbar_global_error = NavigationToolbar(self.canvas_global_error, self)
+        # self.toolbar_function = NavigationToolbar(self.canvas_function, self)
+        # self.toolbar_local_error = NavigationToolbar(self.canvas_local_error, self)
+        # self.toolbar_global_error = NavigationToolbar(self.canvas_global_error, self)
 
-        self.toolbar_function.setStyleSheet("background-color: white")
-        self.toolbar_local_error.setStyleSheet("background-color: white")
-        self.toolbar_global_error.setStyleSheet("background-color: white")
+        # self.toolbar_function.setStyleSheet("background-color: white")
+        # self.toolbar_local_error.setStyleSheet("background-color: white")
+        # self.toolbar_global_error.setStyleSheet("background-color: white")
 
         # Just some button connected to `plot` method
         self.b_plot = QPushButton('Plot')
@@ -76,18 +80,21 @@ class Window(QDialog):
         self.b_set.clicked.connect(self.change_params)
 
         # Add widgets to layouts
-        layout.addLayout(glayout)
 
-        glayout.addWidget(self.toolbar_function, 0, 0)
-        glayout.addWidget(self.canvas_function, 1, 0)
+        # glayout.addWidget(self.toolbar_function, 0, 0)
+        glayout.addWidget(self.canvas_function, 0, 0)
 
-        glayout.addWidget(self.toolbar_local_error, 0, 1)
-        glayout.addWidget(self.canvas_local_error, 1, 1)
+        # glayout.addWidget(self.toolbar_local_error, 0, 1)
+        glayout.addWidget(self.canvas_local_error, 0, 1)
 
-        glayout.addWidget(self.toolbar_global_error, 2, 0)
-        glayout.addWidget(self.canvas_global_error, 3, 0)
+        # glayout.addWidget(self.toolbar_global_error, 2, 0)
+        glayout.addWidget(self.canvas_global_error, 1, 0)
 
         glayout.addItem(config_layout)
+        # glayout.setMenuBar(self.toolbar_function)
+
+        glayout.setSpacing(1)
+
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
         self.X = QLineEdit()
@@ -171,10 +178,7 @@ class Window(QDialog):
         config_layout.addWidget(self.b_add_rk, 4, 2)
         config_layout.addWidget(self.b_add_exact, 5, 2)
 
-        main_layout.addLayout(layout)
-        # main_layout.addLayout(config_layout)
-
-        self.setLayout(main_layout)
+        self.setLayout(glayout)
 
     def euler_switch(self):
         self.is_euler = not self.is_euler
@@ -218,7 +222,6 @@ class Window(QDialog):
                                                float(self.h.text()), float(self.h_start.text()),
                                                float(self.h_end.text()))
                 self.graph_rk.update_axes()
-
 
                 self.plot()
 
@@ -267,13 +270,13 @@ class Window(QDialog):
             ax_global_error.plot(self.graph_rk.g_axis, global_error, color="magenta", label='Runge-Kutta')
 
         if self.is_exact:
-            ax_function.plot(self.graph_euler.e_axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
+            ax_function.plot(self.graph_euler.axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
 
         # Display Legend of each graph
         ax_function.legend()
         ax_local_error.legend()
         ax_global_error.legend()
-
+        plt.tight_layout()
         # refresh canvas
         self.canvas_function.draw()
         self.canvas_local_error.draw()
