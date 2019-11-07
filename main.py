@@ -208,7 +208,8 @@ class Window(QWidget):
                 self.graph_euler.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
                                                   float(self.h.text()), float(self.h_start.text()),
                                                   float(self.h_end.text()))
-
+                print(self.h_start.text())
+                print(self.h_end.text())
                 self.graph_euler.update_axes()
 
                 self.graph_imp_euler.graph.set_params(float(self.x0.text()), float(self.y0.text()),
@@ -252,7 +253,7 @@ class Window(QWidget):
             ax_global_error.plot(self.graph_euler.g_axis, global_error, color="#F6D349", label='Euler')
 
         if self.is_imp_euler:
-            func = self.graph_imp_euler.calculate_local_error()
+            func = self.graph_imp_euler.calculate_approximation()
             local_error = self.graph_imp_euler.calculate_local_error()
             global_error = self.graph_imp_euler.calculate_global_error()
 
@@ -289,3 +290,5 @@ if __name__ == '__main__':
     graph.setStyleSheet("background-color: #1D222F")
     graph.showMaximized()
     sys.exit(app.exec_())
+
+# TODO: change h_start and h_end

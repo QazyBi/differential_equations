@@ -74,10 +74,10 @@ class MyFunction(AbstractExactSolution):
         return y / i - i * (pow(np.e, y / i))
 
     def exact_ith(self, i):
-        # try:
-        return (-i) * np.log(i - self.c)
-        # except:
-        # return (-x - self.h - 1) * np.log(x - self.h - self.c)
+        try:
+            return (-i) * np.log(i - self.c)
+        except:
+            return (-i + self.h) * np.log(i - self.h - self.c)
 
     def calculate_exact(self):
         exact_list = []
@@ -173,7 +173,6 @@ class ImpEulerApproximation(AbstractNumericalMethod):
                         prev, imp_euler_list[-1])))
 
             imp_euler_list.append(i_e)
-
         return imp_euler_list
 
     def calculate_local_error(self):
