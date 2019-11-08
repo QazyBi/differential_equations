@@ -1,195 +1,141 @@
 import sys
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QApplication, QPushButton, QGridLayout, QLineEdit, QLabel
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QGridLayout, QLineEdit, QLabel
 from graph import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+
+
+# from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 
 class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
 
-        self.is_euler = True
-        self.is_imp_euler = True
-        self.is_rk = True
         self.is_exact = True
 
-        # Model, from MVC design pattern
+        # Create models
         self.graph = MyFunction()
         self.graph_euler = EulerApproximation(self.graph)
         self.graph_imp_euler = ImpEulerApproximation(self.graph)
         self.graph_rk = RKApproximation(self.graph)
 
         # a figure instance to plot on
-        self.figure_function = plt.figure(figsize=(6,3))
-        self.figure_local_error = plt.figure(figsize=(6,3))
-        self.figure_global_error = plt.figure(figsize=(6,3))
+        self.figure_function = plt.figure(figsize=(6, 3))
+        self.figure_local_error = plt.figure(figsize=(6, 3))
+        self.figure_global_error = plt.figure(figsize=(6, 3))
 
-        # set the layout
-        config_layout = QGridLayout()
-        glayout = QGridLayout()
+        # Create layouts
+        self.config_layout = QGridLayout()
+        self.grid_layout = QGridLayout()
 
+        # Create buttons
         self.b_add_euler = QPushButton("Euler")
         self.b_add_imp_euler = QPushButton("Improved Euler")
         self.b_add_rk = QPushButton("Runge-Kutta")
         self.b_add_exact = QPushButton("Exact")
+        self.b_plot = QPushButton('Plot')
+        self.b_set = QPushButton("Set")
 
-        self.b_add_euler.setStyleSheet("background-color: #DCDDDF")
-        self.b_add_imp_euler.setStyleSheet("background-color: #DCDDDF")
-        self.b_add_rk.setStyleSheet("background-color: #DCDDDF")
-        self.b_add_exact.setStyleSheet("background-color: #DCDDDF")
-
-        self.b_add_euler.clicked.connect(self.euler_switch)
-        self.b_add_imp_euler.clicked.connect(self.imp_euler_switch)
-        self.b_add_rk.clicked.connect(self.rk_switch)
-        self.b_add_exact.clicked.connect(self.exact_switch)
-
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
+        # Create canvases
         self.canvas_function = FigureCanvas(self.figure_function)
         self.canvas_local_error = FigureCanvas(self.figure_local_error)
         self.canvas_global_error = FigureCanvas(self.figure_global_error)
 
-        # self.canvas_function.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        # self.canvas_local_error.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        # self.canvas_global_error.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.canvas_function.updateGeometry()
-        self.canvas_local_error.updateGeometry()
-        self.canvas_global_error.updateGeometry()
-
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        # self.toolbar_function = NavigationToolbar(self.canvas_function, self)
-        # self.toolbar_local_error = NavigationToolbar(self.canvas_local_error, self)
-        # self.toolbar_global_error = NavigationToolbar(self.canvas_global_error, self)
-
-        # self.toolbar_function.setStyleSheet("background-color: white")
-        # self.toolbar_local_error.setStyleSheet("background-color: white")
-        # self.toolbar_global_error.setStyleSheet("background-color: white")
-
-        # Just some button connected to `plot` method
-        self.b_plot = QPushButton('Plot')
-        self.b_set = QPushButton("Set")
-
-        self.b_plot.setStyleSheet("background-color: #DCDDDF")
-        self.b_set.setStyleSheet("background-color: #DCDDDF")
-        # Add action to buttons
-        self.b_plot.clicked.connect(self.plot)
-        self.b_set.clicked.connect(self.change_params)
-
-        # Add widgets to layouts
-
-        # glayout.addWidget(self.toolbar_function, 0, 0)
-        glayout.addWidget(self.canvas_function, 0, 0)
-
-        # glayout.addWidget(self.toolbar_local_error, 0, 1)
-        glayout.addWidget(self.canvas_local_error, 0, 1)
-
-        # glayout.addWidget(self.toolbar_global_error, 2, 0)
-        glayout.addWidget(self.canvas_global_error, 1, 0)
-
-        glayout.addItem(config_layout)
-        # glayout.setMenuBar(self.toolbar_function)
-
-        glayout.setSpacing(1)
-
+        # Create text fields
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
         self.X = QLineEdit()
         self.h = QLineEdit()
-        self.h_start = QLineEdit()
-        self.h_end = QLineEdit()
+        self.n_start = QLineEdit()
+        self.n_end = QLineEdit()
 
-        self.x0.setFixedSize(50, 30)
-        self.y0.setFixedSize(50, 30)
-        self.X.setFixedSize(50, 30)
-        self.h.setFixedSize(50, 30)
-        self.h_start.setFixedSize(50, 30)
-        self.h_end.setFixedSize(50, 30)
+        # Create label for text fields
+        self.x0_text = QLabel('x0')
+        self.y0_text = QLabel('y0:')
+        self.X_text = QLabel('X:')
+        self.h_text = QLabel('N:')
+        self.n_start_text = QLabel('N start:')
+        self.n_end_text = QLabel('N end:')
 
-        self.b_plot.setFixedSize(150, 20)
-        self.b_set.setFixedSize(150, 20)
-        self.b_add_exact.setFixedSize(150, 20)
-        self.b_add_imp_euler.setFixedSize(150, 20)
-        self.b_add_euler.setFixedSize(150, 20)
-        self.b_add_imp_euler.setFixedSize(150, 20)
-        self.b_add_rk.setFixedSize(150, 20)
+        # Create list of objects
+        self.models = [self.graph_euler, self.graph_imp_euler, self.graph_rk]
+        self.all_models = [self.graph_euler, self.graph_imp_euler, self.graph_rk]
+        self.canvases = [self.canvas_function, self.canvas_local_error, self.canvas_global_error]
 
-        self.x0.setStyleSheet("background-color: #DCDDDF")
-        self.y0.setStyleSheet("background-color: #DCDDDF")
-        self.X.setStyleSheet("background-color: #DCDDDF")
-        self.h.setStyleSheet("background-color: #DCDDDF")
-        self.h_start.setStyleSheet("background-color: #DCDDDF")
-        self.h_end.setStyleSheet("background-color: #DCDDDF")
+        self.label_list = [self.x0_text, self.y0_text, self.X_text, self.h_text, self.n_start_text, self.n_end_text]
+        self.line_edit_list = [self.x0, self.y0, self.X, self.h, self.n_start, self.n_end]
+        self.button_list = [self.b_plot, self.b_set, self.b_add_euler, self.b_add_imp_euler, self.b_add_rk,
+                            self.b_add_exact]
+
+        # call functions
+        self.customize_config_layout()
+        self.customize_grid_layout()
+        self.customize_ui()
+        self.add_ui_functionality()
+        self.setLayout(self.grid_layout)
+
+    def customize_grid_layout(self):
+        self.grid_layout.addWidget(self.canvas_function, 0, 0)
+        self.grid_layout.addWidget(self.canvas_local_error, 0, 1)
+        self.grid_layout.addWidget(self.canvas_global_error, 1, 0)
+        self.grid_layout.addItem(self.config_layout)
+        self.grid_layout.setSpacing(1)
+
+    def customize_config_layout(self):
+        for i in range(len(self.label_list)):
+            self.config_layout.addWidget(self.label_list[i], i, 0)
+            self.config_layout.addWidget(self.line_edit_list[i], i, 1)
+            self.config_layout.addWidget(self.button_list[i], i, 2)
+
+    def customize_ui(self):
+        for button in self.button_list:
+            button.setStyleSheet("background-color: #DCDDDF")
+            button.setFixedSize(150, 30)
+
+        for line in self.line_edit_list:
+            line.setFixedSize(50, 30)
+            line.setStyleSheet("background-color: #DCDDDF")
+
+        for label in self.label_list:
+            label.setFixedSize(50, 30)
+            label.setStyleSheet("color: #DCDDDF")
 
         self.x0.setText("1")
         self.y0.setText("0")
         self.X.setText("8")
         self.h.setText("4")
-        self.h_start.setText("1")
-        self.h_end.setText("5")
+        self.n_start.setText("1")
+        self.n_end.setText("5")
 
-        x0_text = QLabel('x0:')
-        y0_text = QLabel('y0:')
-        X_text = QLabel('X:')
-        h_text = QLabel('N:')
-        h_start_text = QLabel('h start:')
-        h_end_text = QLabel('h end:')
-
-        x0_text.setFixedSize(20, 30)
-        y0_text.setFixedSize(20, 30)
-        X_text.setFixedSize(20, 30)
-        h_text.setFixedSize(20, 30)
-        h_start_text.setFixedSize(55, 30)
-        h_end_text.setFixedSize(50, 30)
-
-        x0_text.setStyleSheet("color: #DCDDDF")
-        y0_text.setStyleSheet("color: #DCDDDF")
-        X_text.setStyleSheet("color: #DCDDDF")
-        h_text.setStyleSheet("color: #DCDDDF")
-        h_start_text.setStyleSheet('color: #DCDDDF')
-        h_end_text.setStyleSheet('color: #DCDDDF')
-
-        config_layout.addWidget(x0_text, 0, 0)
-        config_layout.addWidget(self.x0, 0, 1)
-
-        config_layout.addWidget(y0_text, 1, 0)
-        config_layout.addWidget(self.y0, 1, 1)
-
-        config_layout.addWidget(X_text, 2, 0)
-        config_layout.addWidget(self.X, 2, 1)
-
-        config_layout.addWidget(h_text, 3, 0)
-        config_layout.addWidget(self.h, 3, 1)
-
-        config_layout.addWidget(h_start_text, 4, 0)
-        config_layout.addWidget(self.h_start, 4, 1)
-
-        config_layout.addWidget(h_end_text, 5, 0)
-        config_layout.addWidget(self.h_end, 5, 1)
-
-        config_layout.addWidget(self.b_set, 0, 2)
-        config_layout.addWidget(self.b_plot, 1, 2)
-
-        config_layout.addWidget(self.b_add_euler, 2, 2)
-        config_layout.addWidget(self.b_add_imp_euler, 3, 2)
-        config_layout.addWidget(self.b_add_rk, 4, 2)
-        config_layout.addWidget(self.b_add_exact, 5, 2)
-
-        self.setLayout(glayout)
+    def add_ui_functionality(self):
+        # Set action to buttons
+        self.b_add_euler.clicked.connect(self.euler_switch)
+        self.b_add_imp_euler.clicked.connect(self.imp_euler_switch)
+        self.b_add_rk.clicked.connect(self.rk_switch)
+        self.b_add_exact.clicked.connect(self.exact_switch)
+        self.b_plot.clicked.connect(self.plot)
+        self.b_set.clicked.connect(self.change_params)
 
     def euler_switch(self):
-        self.is_euler = not self.is_euler
+        if self.models.__contains__(self.graph_euler):
+            self.models.remove(self.graph_euler)
+        else:
+            self.models.append(self.graph_euler)
         self.plot()
 
     def imp_euler_switch(self):
-        self.is_imp_euler = not self.is_imp_euler
+        if self.models.__contains__(self.graph_imp_euler):
+            self.models.remove(self.graph_imp_euler)
+        else:
+            self.models.append(self.graph_imp_euler)
         self.plot()
 
     def rk_switch(self):
-        self.is_rk = not self.is_rk
+        if self.models.__contains__(self.graph_rk):
+            self.models.remove(self.graph_rk)
+        else:
+            self.models.append(self.graph_rk)
         self.plot()
 
     def exact_switch(self):
@@ -198,31 +144,18 @@ class Window(QWidget):
 
     def change_params(self):
         if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != "" \
-                and self.h_start.text() != "" and self.h_end.text() != "":
+                and self.n_start.text() != "" and self.n_end.text() != "":
 
             if float(self.x0.text()) == 0:
                 self.x0.setText("Incorrect")
             elif float(self.X.text()) <= 2:
                 self.X.setText("Incorrect")
             else:
-                self.graph_euler.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
-                                                  float(self.h.text()), float(self.h_start.text()),
-                                                  float(self.h_end.text()))
-                print(self.h_start.text())
-                print(self.h_end.text())
-                self.graph_euler.update_axes()
-
-                self.graph_imp_euler.graph.set_params(float(self.x0.text()), float(self.y0.text()),
-                                                      float(self.X.text()),
-                                                      float(self.h.text()), float(self.h_start.text()),
-                                                      float(self.h_end.text()))
-
-                self.graph_imp_euler.update_axes()
-
-                self.graph_rk.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
-                                               float(self.h.text()), float(self.h_start.text()),
-                                               float(self.h_end.text()))
-                self.graph_rk.update_axes()
+                for model in self.all_models:
+                    model.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
+                                           float(self.h.text()), float(self.n_start.text()),
+                                           float(self.n_end.text()))
+                    model.update_axes()
 
                 self.plot()
 
@@ -233,42 +166,23 @@ class Window(QWidget):
         self.figure_global_error.clear()
 
         # create an axis
-        ax_function = self.figure_function.add_subplot(111, xlabel="values of x", ylabel="values of y")
-        ax_local_error = self.figure_local_error.add_subplot(111, xlabel="values of x", ylabel="values of y")
-        ax_global_error = self.figure_global_error.add_subplot(111, xlabel="values of h", ylabel="values of y")
+        ax_function = self.figure_function.add_subplot(xlabel="values of x", ylabel="values of y",
+                                                       title="Graph of Exact and Approximation Functions")
 
-        # set titles
-        ax_function.set(title='Graph of Exact and Approximation Functions')
-        ax_local_error.set(title='Graph of Local Errors')
-        ax_global_error.set(title='Graph of Global Errors')
+        ax_local_error = self.figure_local_error.add_subplot(xlabel="values of x", ylabel="values of local error",
+                                                             title='Graph of Local Errors')
 
-        # Plot chosen graphs
-        if self.is_euler:
-            func = self.graph_euler.calculate_approximation()
-            local_error = self.graph_euler.calculate_local_error()
-            global_error = self.graph_euler.calculate_global_error()
+        ax_global_error = self.figure_global_error.add_subplot(xlabel="values of N", ylabel="values of global error",
+                                                               title='Graph of Global Errors')
 
-            ax_function.plot(self.graph_euler.axis, func, color="#F6D349", label='Euler')
-            ax_local_error.plot(self.graph_euler.axis, local_error, color="#F6D349", label='Euler')
-            ax_global_error.plot(self.graph_euler.g_axis, global_error, color="#F6D349", label='Euler')
+        for model in self.models:
+            func = model.calculate_approximation()
+            local_error = model.calculate_local_error()
+            global_error = model.calculate_global_error()
 
-        if self.is_imp_euler:
-            func = self.graph_imp_euler.calculate_approximation()
-            local_error = self.graph_imp_euler.calculate_local_error()
-            global_error = self.graph_imp_euler.calculate_global_error()
-
-            ax_function.plot(self.graph_imp_euler.axis, func, color="#8FDDD3", label='Improved Euler')
-            ax_local_error.plot(self.graph_imp_euler.axis, local_error, color="#8FDDD3", label='Improved Euler')
-            ax_global_error.plot(self.graph_imp_euler.g_axis, global_error, color="#8FDDD3", label='Improved Euler')
-
-        if self.is_rk:
-            func = self.graph_rk.calculate_approximation()
-            local_error = self.graph_rk.calculate_local_error()
-            global_error = self.graph_rk.calculate_global_error()
-
-            ax_function.plot(self.graph_rk.axis, func, color="magenta", label='Runge-Kutta')
-            ax_local_error.plot(self.graph_rk.axis, local_error, color="magenta", label='Runge-Kutta')
-            ax_global_error.plot(self.graph_rk.g_axis, global_error, color="magenta", label='Runge-Kutta')
+            ax_function.plot(model.axis, func, label=model.label, color=model.color)
+            ax_local_error.plot(model.axis, local_error, label=model.label, color=model.color)
+            ax_global_error.plot(model.g_axis, global_error, label=model.label, color=model.color)
 
         if self.is_exact:
             ax_function.plot(self.graph_euler.axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
@@ -278,10 +192,10 @@ class Window(QWidget):
         ax_local_error.legend()
         ax_global_error.legend()
         plt.tight_layout()
+
         # refresh canvas
-        self.canvas_function.draw()
-        self.canvas_local_error.draw()
-        self.canvas_global_error.draw()
+        for canvas in self.canvases:
+            canvas.draw()
 
 
 if __name__ == '__main__':
@@ -291,4 +205,6 @@ if __name__ == '__main__':
     graph.showMaximized()
     sys.exit(app.exec_())
 
-# TODO: change h_start and h_end
+# self.toolbar_function = NavigationToolbar(self.canvas_function, self)
+# self.toolbar_function.setStyleSheet("background-color: white")
+# glayout.addWidget(self.toolbar_function, 0, 0)

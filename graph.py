@@ -8,11 +8,11 @@ class AbstractExactSolution(ABC):
         pass
 
     @abstractmethod
-    def y_prime_ith(self, i, y):
+    def y_prime_ith(self, i: float, y: float):
         pass
 
     @abstractmethod
-    def exact_ith(self, i):
+    def exact_ith(self, i: float):
         pass
 
 
@@ -31,7 +31,7 @@ class AbstractNumericalMethod(ABC):
 
 
 class MyFunction(AbstractExactSolution):
-    def __init__(self, x0=1, y0=0, x=8, n=5, n_start=1, n_end=5):
+    def __init__(self, x0=1, y0=0, x=8, n=4, n_start=1, n_end=5):
         # initial value for x
         self.x0 = x0
         # initial value for y
@@ -73,34 +73,35 @@ class MyFunction(AbstractExactSolution):
     def y_prime_ith(self, i, y):
         return y / i - i * (pow(np.e, y / i))
 
-    def exact_ith(self, i):
+    def exact_ith(self, i) -> float:
         try:
             return (-i) * np.log(i - self.c)
-        except:
-            return (-i + self.h) * np.log(i - self.h - self.c)
+        except RuntimeWarning:
+            print("i:{} self.c:{}".format(i, self.c))
 
-    def calculate_exact(self):
+    # TODO: solve this cause if N is > that 10 it crashes
+    def calculate_exact(self) -> list:
         exact_list = []
 
         for i in self.e_axis:
             exact_list.append(self.exact_ith(i))
-
         return exact_list
 
 
 class EulerApproximation(AbstractNumericalMethod):
     def __init__(self, graph):
         self.graph = graph
-
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end, 1)
+        self.color = '#F6D349'
+        self.label = 'Euler'
+        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
         self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
-        # TODO: solve this problem
+
         # self.step = 0.1 if self.h > 1 else self.h
 
     def update_axes(self):
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end, 1)
+        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
         self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
-        # print(self.axis)
+        # print(self.g_axis)
         # self.step = 0.1 if self.h > 1 else self.h
 
     # Euler method y_n = y_n-1 + h*f(n-1, y_n-1)
@@ -131,7 +132,7 @@ class EulerApproximation(AbstractNumericalMethod):
     def calculate_global_error(self):
         ge_euler = []
 
-        for h in np.arange(self.graph.n_start, self.graph.n_end, 1):
+        for h in self.g_axis:
             euler_list = [self.graph.y0]
             for i in np.arange(self.graph.x0 + h, self.graph.x, h):
                 if i == self.graph.x0:
@@ -148,13 +149,14 @@ class EulerApproximation(AbstractNumericalMethod):
 class ImpEulerApproximation(AbstractNumericalMethod):
     def __init__(self, graph):
         self.graph = graph
-
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end, 1)
+        self.color = '#8FDDD3'
+        self.label = 'Improved Euler'
+        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
         self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
     def update_axes(self):
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end, 1)
+        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
         self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
@@ -193,7 +195,7 @@ class ImpEulerApproximation(AbstractNumericalMethod):
 
     def calculate_global_error(self):
         ge_imp_euler = []
-        for h in np.arange(self.graph.n_start, self.graph.n_end, 1):
+        for h in self.g_axis:
             imp_euler_list = [self.graph.y0]
             for i in np.arange(self.graph.x0 + h, self.graph.x, h):
                 prev = i - h
@@ -213,13 +215,14 @@ class ImpEulerApproximation(AbstractNumericalMethod):
 class RKApproximation(AbstractNumericalMethod):
     def __init__(self, graph):
         self.graph = graph
-
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end, 1)
+        self.color = 'magenta'
+        self.label = 'Runge-Kutta'
+        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
         self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
     def update_axes(self):
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end, 1)
+        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
         self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
@@ -263,7 +266,7 @@ class RKApproximation(AbstractNumericalMethod):
     def calculate_global_error(self):
         ge_rk = []
 
-        for h in np.arange(self.graph.n_start, self.graph.n_end, 1):
+        for h in self.g_axis:
             rk_list = [self.graph.y0]
             for i in np.arange(self.graph.x0 + h, self.graph.x, h):
                 prev = i - h
