@@ -3,15 +3,27 @@ from AbstractNumericalMethod import AbstractNumericalMethod
 
 
 class RKApproximation(AbstractNumericalMethod):
-    def __init__(self, graph):
+    def __init__(self, graph, n_start=2, n_end=5):
         self.graph = graph
         self.color = 'magenta'
         self.label = 'Runge-Kutta'
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        # self.step = 0.1 if self.h > 1 else self.h
 
-    def update_axes(self):
-        self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
+        self.n_start = n_start
+        self.n_end = n_end
+
+    def set_params(self, graph, color, label, n_start=2, n_end=5):
+        if graph is not None:
+            self.graph = graph
+        if color is not None:
+            self.color = color
+        if label is not None:
+            self.label = label
+
+        self.n_start = n_start
+        self.n_end = n_end
+
+    def axis_global_error(self):
+        return np.arange(self.n_start, self.n_end + 1, 1)
         # self.step = 0.1 if self.h > 1 else self.h
 
     def axis(self, step):
@@ -57,7 +69,7 @@ class RKApproximation(AbstractNumericalMethod):
 
     def calculate_global_error(self):
         ge_rk = []
-        for n in self.g_axis:
+        for n in self.axis_global_error():
             step = float((self.graph.x_limit - self.graph.x0) / n)
             ge_rk.append(abs(self.graph.exact_ith(self.graph.x_limit) - self.calculate_approximation(step)[-1]))
 

@@ -10,6 +10,7 @@ from EulerMethod import EulerApproximation
 from ImprovedEulerMethod import ImpEulerApproximation
 from RKMethod import RKApproximation
 
+
 class NavigationToolbar(NavigationToolbar2QT):
     # only display the buttons we need
     toolitems = [t for t in NavigationToolbar2QT.toolitems if
@@ -167,9 +168,8 @@ class Window(QWidget):
             else:
                 for model in self.all_models:
                     model.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
-                                           int(self.n.text()), int(self.n_start.text()),
-                                           int(self.n_end.text()))
-                    model.update_axes()
+                                           int(self.n.text()))
+                    model.set_params(None, None, None, n_start=int(self.n_start.text()), n_end=int(self.n_end.text()))
 
                 self.plot()
 
@@ -194,10 +194,11 @@ class Window(QWidget):
             local_error = model.calculate_local_error()
             global_error = model.calculate_global_error()
             axis = model.axis(model.graph.h)
+            axis_global_error = model.axis_global_error()
 
             ax_function.plot(axis, func, label=model.label, color=model.color)
             ax_local_error.plot(axis, local_error, label=model.label, color=model.color)
-            ax_global_error.plot(model.g_axis, global_error, label=model.label, color=model.color)
+            ax_global_error.plot(axis_global_error, global_error, label=model.label, color=model.color)
 
         if self.is_exact:
             ax_function.plot(self.graph_euler.graph.e_axis, self.graph.calculate_exact(), '--', color="red",

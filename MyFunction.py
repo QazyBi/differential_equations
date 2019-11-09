@@ -3,7 +3,7 @@ from AbstractExactSolution import AbstractExactSolution
 
 
 class MyFunction(AbstractExactSolution):
-    def __init__(self, x0=1, y0=0, x=8, n=4, n_start=1, n_end=5):
+    def __init__(self, x0=1, y0=0, x=8, n=4):
         # initial value for x
         self.x0 = x0
         # initial value for y
@@ -15,16 +15,12 @@ class MyFunction(AbstractExactSolution):
         # final value for interval (x0; x)
         self.x = round(x + self.h, 3)
         self.x_limit = x
-        # initial value for number of points
-        self.n_start = n_start
-        # final value for number of points
-        self.n_end = n_end
 
         self.e_axis = np.arange(self.x0, self.x, self.h)
         # coefficient in ivp
         self.c = self.x0 - pow(np.e, (-self.y0) / self.x0)
 
-    def set_params(self, x0, y0, x, n, n_start, n_end):
+    def set_params(self, x0, y0, x, n):
         self.x0 = x0
         self.y0 = y0
 
@@ -34,8 +30,6 @@ class MyFunction(AbstractExactSolution):
         # final value for interval (x0; x)
         self.x_limit = x
         self.x = round(x + self.h, 3)
-        self.n_start = n_start
-        self.n_end = n_end
 
         self.e_axis = [round(x, 2) for x in np.arange(self.x0, self.x, self.h) if round(x, 3) <= self.x_limit]
         # self.step = 0.1 if self.h > 1 else self.h
