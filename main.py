@@ -1,10 +1,14 @@
 import sys
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QGridLayout, QLineEdit, QLabel
-from graph import *
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT  # as NavigationToolbar
 
+from MyFunction import MyFunction
+from EulerMethod import EulerApproximation
+from ImprovedEulerMethod import ImpEulerApproximation
+from RKMethod import RKApproximation
 
 class NavigationToolbar(NavigationToolbar2QT):
     # only display the buttons we need
@@ -216,7 +220,3 @@ if __name__ == '__main__':
     graph.setStyleSheet("background-color: #1D222F")
     graph.showMaximized()
     sys.exit(app.exec_())
-
-# self.toolbar_function = NavigationToolbar(self.canvas_function, self)
-# self.toolbar_function.setStyleSheet("background-color: white")
-# glayout.addWidget(self.toolbar_function, 0, 0)
