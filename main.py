@@ -3,9 +3,13 @@ from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QGridLayout, QLi
 from graph import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT  # as NavigationToolbar
 
 
-# from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+class NavigationToolbar(NavigationToolbar2QT):
+    # only display the buttons we need
+    toolitems = [t for t in NavigationToolbar2QT.toolitems if
+                 t[0] in ('Home', 'Pan', 'Zoom')]
 
 
 class Window(QWidget):
@@ -42,6 +46,9 @@ class Window(QWidget):
         self.canvas_local_error = FigureCanvas(self.figure_local_error)
         self.canvas_global_error = FigureCanvas(self.figure_global_error)
 
+        self.toolbar_function = NavigationToolbar(self.canvas_function, self)
+        self.toolbar_local_error = NavigationToolbar(self.canvas_local_error, self)
+        self.toolbar_global_error = NavigationToolbar(self.canvas_global_error, self)
         # Create text fields
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
@@ -87,6 +94,9 @@ class Window(QWidget):
             self.config_layout.addWidget(self.label_list[i], i, 0)
             self.config_layout.addWidget(self.line_edit_list[i], i, 1)
             self.config_layout.addWidget(self.button_list[i], i, 2)
+        self.config_layout.addWidget(self.toolbar_function)
+        self.config_layout.addWidget(self.toolbar_local_error)
+        self.config_layout.addWidget(self.toolbar_global_error)
 
     def customize_ui(self):
         for button in self.button_list:
@@ -186,7 +196,8 @@ class Window(QWidget):
             ax_global_error.plot(model.g_axis, global_error, label=model.label, color=model.color)
 
         if self.is_exact:
-            ax_function.plot(self.graph_euler.graph.e_axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
+            ax_function.plot(self.graph_euler.graph.e_axis, self.graph.calculate_exact(), '--', color="red",
+                             label='Exact')
 
         # Display Legend of each graph
         ax_function.legend()
