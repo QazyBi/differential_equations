@@ -46,7 +46,7 @@ class Window(QWidget):
         self.x0 = QLineEdit()
         self.y0 = QLineEdit()
         self.X = QLineEdit()
-        self.h = QLineEdit()
+        self.n = QLineEdit()
         self.n_start = QLineEdit()
         self.n_end = QLineEdit()
 
@@ -54,7 +54,7 @@ class Window(QWidget):
         self.x0_text = QLabel('x0')
         self.y0_text = QLabel('y0:')
         self.X_text = QLabel('X:')
-        self.h_text = QLabel('N:')
+        self.n_text = QLabel('N:')
         self.n_start_text = QLabel('N start:')
         self.n_end_text = QLabel('N end:')
 
@@ -63,8 +63,8 @@ class Window(QWidget):
         self.all_models = [self.graph_euler, self.graph_imp_euler, self.graph_rk]
         self.canvases = [self.canvas_function, self.canvas_local_error, self.canvas_global_error]
 
-        self.label_list = [self.x0_text, self.y0_text, self.X_text, self.h_text, self.n_start_text, self.n_end_text]
-        self.line_edit_list = [self.x0, self.y0, self.X, self.h, self.n_start, self.n_end]
+        self.label_list = [self.x0_text, self.y0_text, self.X_text, self.n_text, self.n_start_text, self.n_end_text]
+        self.line_edit_list = [self.x0, self.y0, self.X, self.n, self.n_start, self.n_end]
         self.button_list = [self.b_plot, self.b_set, self.b_add_euler, self.b_add_imp_euler, self.b_add_rk,
                             self.b_add_exact]
 
@@ -104,7 +104,7 @@ class Window(QWidget):
         self.x0.setText("1")
         self.y0.setText("0")
         self.X.setText("8")
-        self.h.setText("4")
+        self.n.setText("4")
         self.n_start.setText("1")
         self.n_end.setText("5")
 
@@ -143,18 +143,18 @@ class Window(QWidget):
         self.plot()
 
     def change_params(self):
-        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.h.text() != "" \
+        if self.x0.text() != "" and self.y0.text() != "" and self.X.text() != "" and self.n.text() != "" \
                 and self.n_start.text() != "" and self.n_end.text() != "":
 
             if float(self.x0.text()) == 0:
                 self.x0.setText("Incorrect")
-            elif float(self.X.text()) <= 2:
+            elif abs(float(self.X.text()) - abs(float(self.x0.text()))) < 2:
                 self.X.setText("Incorrect")
             else:
                 for model in self.all_models:
                     model.graph.set_params(float(self.x0.text()), float(self.y0.text()), float(self.X.text()),
-                                           float(self.h.text()), float(self.n_start.text()),
-                                           float(self.n_end.text()))
+                                           int(self.n.text()), int(self.n_start.text()),
+                                           int(self.n_end.text()))
                     model.update_axes()
 
                 self.plot()
@@ -176,16 +176,17 @@ class Window(QWidget):
                                                                title='Graph of Global Errors')
 
         for model in self.models:
-            func = model.calculate_approximation()
+            func = model.calculate_approximation(model.graph.h)
             local_error = model.calculate_local_error()
             global_error = model.calculate_global_error()
+            axis = model.axis(model.graph.h)
 
-            ax_function.plot(model.axis, func, label=model.label, color=model.color)
-            ax_local_error.plot(model.axis, local_error, label=model.label, color=model.color)
+            ax_function.plot(axis, func, label=model.label, color=model.color)
+            ax_local_error.plot(axis, local_error, label=model.label, color=model.color)
             ax_global_error.plot(model.g_axis, global_error, label=model.label, color=model.color)
 
         if self.is_exact:
-            ax_function.plot(self.graph_euler.axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
+            ax_function.plot(self.graph_euler.graph.e_axis, self.graph.calculate_exact(), '--', color="red", label='Exact')
 
         # Display Legend of each graph
         ax_function.legend()

@@ -18,7 +18,7 @@ class AbstractExactSolution(ABC):
 
 class AbstractNumericalMethod(ABC):
     @abstractmethod
-    def calculate_approximation(self):
+    def calculate_approximation(self, step):
         pass
 
     @abstractmethod
@@ -41,8 +41,8 @@ class MyFunction(AbstractExactSolution):
         self.h = float((x - x0) / n)
 
         # final value for interval (x0; x)
-        self.x = x + self.h
-
+        self.x = round(x + self.h, 3)
+        self.x_limit = x
         # initial value for number of points
         self.n_start = n_start
         # final value for number of points
@@ -60,11 +60,12 @@ class MyFunction(AbstractExactSolution):
         self.h = float((x - x0) / n)
 
         # final value for interval (x0; x)
-        self.x = x + self.h
+        self.x_limit = x
+        self.x = round(x + self.h, 3)
         self.n_start = n_start
         self.n_end = n_end
 
-        self.e_axis = np.arange(self.x0, self.x, self.h)
+        self.e_axis = [round(x, 2) for x in np.arange(self.x0, self.x, self.h) if round(x, 3) <= self.x_limit]
         # self.step = 0.1 if self.h > 1 else self.h
 
         self.c = self.x0 - pow(np.e, (-self.y0) / self.x0)
@@ -74,12 +75,8 @@ class MyFunction(AbstractExactSolution):
         return y / i - i * (pow(np.e, y / i))
 
     def exact_ith(self, i) -> float:
-        try:
-            return (-i) * np.log(i - self.c)
-        except RuntimeWarning:
-            print("i:{} self.c:{}".format(i, self.c))
+        return (-i) * np.log(i - self.c)
 
-    # TODO: solve this cause if N is > that 10 it crashes
     def calculate_exact(self) -> list:
         exact_list = []
 
@@ -94,31 +91,30 @@ class EulerApproximation(AbstractNumericalMethod):
         self.color = '#F6D349'
         self.label = 'Euler'
         self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
-
         # self.step = 0.1 if self.h > 1 else self.h
+
+    def axis(self, step):
+        return [round(x, 2) for x in np.arange(self.graph.x0, self.graph.x, step) if round(x, 3) <= self.graph.x_limit]
 
     def update_axes(self):
         self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
-        # print(self.g_axis)
         # self.step = 0.1 if self.h > 1 else self.h
 
     # Euler method y_n = y_n-1 + h*f(n-1, y_n-1)
-    def calculate_approximation(self):
+    def calculate_approximation(self, step):
         euler_list = [self.graph.y0]
 
-        for i in self.axis:
+        for i in self.axis(step):
             if i == self.graph.x0:
                 continue
-            e = euler_list[-1] + self.graph.h * self.graph.y_prime_ith(i - self.graph.h, euler_list[-1])
-
+            e = euler_list[-1] + step * self.graph.y_prime_ith(i - step, euler_list[-1])
             euler_list.append(e)
+
         return euler_list
 
     def calculate_local_error(self):
         le_euler = [0]
-        for i in self.axis:
+        for i in self.axis(self.graph.h):
             if i == self.graph.x0:
                 continue
             e2 = self.graph.exact_ith(i - self.graph.h) + self.graph.h * self.graph.y_prime_ith(i - self.graph.h,
@@ -132,17 +128,9 @@ class EulerApproximation(AbstractNumericalMethod):
     def calculate_global_error(self):
         ge_euler = []
 
-        for h in self.g_axis:
-            euler_list = [self.graph.y0]
-            for i in np.arange(self.graph.x0 + h, self.graph.x, h):
-                if i == self.graph.x0:
-                    continue
-                e = euler_list[-1] + h * self.graph.y_prime_ith(i - h, euler_list[-1])
-
-                euler_list.append(e)
-
-            ge_euler.append(abs(self.graph.exact_ith(self.graph.x - h) - euler_list[-1]))
-
+        for n in self.g_axis:
+            step = float((self.graph.x_limit - self.graph.x0) / n)
+            ge_euler.append(abs(self.graph.exact_ith(self.graph.x_limit) - self.calculate_approximation(step)[-1]))
         return ge_euler
 
 
@@ -152,34 +140,36 @@ class ImpEulerApproximation(AbstractNumericalMethod):
         self.color = '#8FDDD3'
         self.label = 'Improved Euler'
         self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
     def update_axes(self):
         self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
+    def axis(self, step):
+        return [round(x, 4) for x in np.arange(self.graph.x0, self.graph.x, step) if round(x, 4) <= self.graph.x_limit]
+
     # Improved Euler method y_n = y_n-1 + h/2 * (f(n-1, y_n-1) + f(n, y_n-1 + h*f(n-1, y_n-1)))
-    def calculate_approximation(self):
+    def calculate_approximation(self, step):
         imp_euler_list = [self.graph.y0]
 
-        for i in self.axis:
+        for i in self.axis(step):
             if i == self.graph.x0:
                 continue
-            prev = i - self.graph.h
+            prev = i - step
 
-            i_e = imp_euler_list[-1] + 0.5 * self.graph.h * (self.graph.y_prime_ith(prev, imp_euler_list[-1])
-                                                             + self.graph.y_prime_ith(prev, imp_euler_list[-1] +
-                                                                                      self.graph.h * self.graph.y_prime_ith(
-                        prev, imp_euler_list[-1])))
+            i_e = imp_euler_list[-1] + 0.5 * step * (self.graph.y_prime_ith(prev, imp_euler_list[-1])
+                                                     + self.graph.y_prime_ith(prev, imp_euler_list[-1] +
+                                                                              step * self.graph.y_prime_ith(prev,
+                                                                                                            imp_euler_list[
+                                                                                                                -1])))
 
             imp_euler_list.append(i_e)
         return imp_euler_list
 
     def calculate_local_error(self):
         le_imp_euler = [0]
-        for i in self.axis:
+        for i in self.axis(self.graph.h):
             if i == self.graph.x0:
                 continue
             prev = i - self.graph.h
@@ -195,19 +185,9 @@ class ImpEulerApproximation(AbstractNumericalMethod):
 
     def calculate_global_error(self):
         ge_imp_euler = []
-        for h in self.g_axis:
-            imp_euler_list = [self.graph.y0]
-            for i in np.arange(self.graph.x0 + h, self.graph.x, h):
-                prev = i - h
-                i_e = imp_euler_list[-1] + 0.5 * h * (self.graph.y_prime_ith(prev, imp_euler_list[-1])
-                                                      + self.graph.y_prime_ith(prev, imp_euler_list[-1] +
-                                                                               h * self.graph.y_prime_ith(prev,
-                                                                                                          imp_euler_list[
-                                                                                                              -1])))
-
-                imp_euler_list.append(i_e)
-
-            ge_imp_euler.append(abs(self.graph.exact_ith(self.graph.x - h) - imp_euler_list[-1]))
+        for n in self.g_axis:
+            step = float((self.graph.x_limit - self.graph.x0) / n)
+            ge_imp_euler.append(abs(self.graph.exact_ith(self.graph.x_limit) - self.calculate_approximation(step)[-1]))
 
         return ge_imp_euler
 
@@ -218,27 +198,28 @@ class RKApproximation(AbstractNumericalMethod):
         self.color = 'magenta'
         self.label = 'Runge-Kutta'
         self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
     def update_axes(self):
         self.g_axis = np.arange(self.graph.n_start, self.graph.n_end + 1, 1)
-        self.axis = np.arange(self.graph.x0, self.graph.x, self.graph.h)
         # self.step = 0.1 if self.h > 1 else self.h
 
-    def calculate_approximation(self):
+    def axis(self, step):
+        return [round(x, 4) for x in np.arange(self.graph.x0, self.graph.x, step) if round(x, 4) <= self.graph.x_limit+0.00001]
+
+    def calculate_approximation(self, step):
         rk_list = [self.graph.y0]
 
-        for i in self.axis:
+        for i in self.axis(step):
             if i == self.graph.x0:
                 continue
-            prev = i - self.graph.h
+            prev = i - step
 
             k1 = self.graph.y_prime_ith(prev, rk_list[-1])
-            k2 = self.graph.y_prime_ith(i - self.graph.h / 2, rk_list[-1] + (self.graph.h * k1) / 2)
-            k3 = self.graph.y_prime_ith(i - self.graph.h / 2, rk_list[-1] + (self.graph.h * k2) / 2)
-            k4 = self.graph.y_prime_ith(i, rk_list[-1] + self.graph.h * k3)
-            rk = rk_list[-1] + (self.graph.h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
+            k2 = self.graph.y_prime_ith(i - step / 2, rk_list[-1] + (step * k1) / 2)
+            k3 = self.graph.y_prime_ith(i - step / 2, rk_list[-1] + (step * k2) / 2)
+            k4 = self.graph.y_prime_ith(i, rk_list[-1] + step * k3)
+            rk = rk_list[-1] + (step / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
             rk_list.append(rk)
 
@@ -247,7 +228,7 @@ class RKApproximation(AbstractNumericalMethod):
     def calculate_local_error(self):
         le_rk = [0]
 
-        for i in self.axis:
+        for i in self.axis(self.graph.h):
             if i == self.graph.x0:
                 continue
             prev = i - self.graph.h
@@ -265,20 +246,8 @@ class RKApproximation(AbstractNumericalMethod):
 
     def calculate_global_error(self):
         ge_rk = []
-
-        for h in self.g_axis:
-            rk_list = [self.graph.y0]
-            for i in np.arange(self.graph.x0 + h, self.graph.x, h):
-                prev = i - h
-
-                k1 = self.graph.y_prime_ith(prev, rk_list[-1])
-                k2 = self.graph.y_prime_ith(i - h / 2, rk_list[-1] + (h * k1) / 2)
-                k3 = self.graph.y_prime_ith(i - h / 2, rk_list[-1] + (h * k2) / 2)
-                k4 = self.graph.y_prime_ith(i, rk_list[-1] + h * k3)
-                rk = rk_list[-1] + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
-
-                rk_list.append(rk)
-
-            ge_rk.append(abs(self.graph.exact_ith(self.graph.x - h) - rk_list[-1]))
+        for n in self.g_axis:
+            step = float((self.graph.x_limit - self.graph.x0) / n)
+            ge_rk.append(abs(self.graph.exact_ith(self.graph.x_limit) - self.calculate_approximation(step)[-1]))
 
         return ge_rk
