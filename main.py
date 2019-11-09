@@ -188,7 +188,7 @@ class Window(QWidget):
 
         ax_global_error = self.figure_global_error.add_subplot(xlabel="values of N", ylabel="values of global error",
                                                                title='Graph of Global Errors')
-
+        # plot each graph
         for model in self.models:
             func = model.calculate_approximation(model.graph.h)
             local_error = model.calculate_local_error()
