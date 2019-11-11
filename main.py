@@ -99,6 +99,7 @@ class Window(QWidget):
             self.config_layout.addWidget(self.label_list[i], i, 0)
             self.config_layout.addWidget(self.line_edit_list[i], i, 1)
             self.config_layout.addWidget(self.button_list[i], i, 2)
+
         self.config_layout.addWidget(self.toolbar_function)
         self.config_layout.addWidget(self.toolbar_local_error)
         self.config_layout.addWidget(self.toolbar_global_error)
